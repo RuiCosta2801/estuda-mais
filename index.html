@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estuda+</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <meta name="theme-color" content="#0b1120">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+    <!-- NOTIFICAÇÃO ANIMADA DE CONQUISTA -->
+    <div id="toast-conquista" class="toast-conquista" onclick="fecharToastConquista()">
+        <div class="toast-icone">🏆</div>
+        <div class="toast-conteudo">
+            <strong id="toast-titulo">Sessão Concluída!</strong>
+            <p id="toast-mensagem">Estudaste 0m e 0s.</p>
+        </div>
+    </div>
+
+    <header id="app-header">
+        <h1>Estuda<span>+</span></h1>
+    </header>
+
+    <!-- ECRÃ 1: PRINCIPAL (HOME) -->
+    <div id="ecra-principal">
+        
+        <!-- Secção de Seleção para Estudar -->
+        <div class="container" style="text-align: center;">
+            <h2>O que vais estudar agora?</h2>
+            
+            <p id="msg-sem-disciplinas-topo" class="texto-vazio">Ainda não tens disciplinas para estudar</p>
+            <div id="botoes-selecao-disciplinas" class="grid-botoes-disciplinas"></div>
+            
+            <div style="margin-top: 22px;">
+                <button id="btn-iniciar" onclick="iniciarCronometro()" disabled style="width: 100%; padding: 14px; font-size: 16px;">▶ Iniciar Sessão de Estudo</button>
+            </div>
+        </div>
+
+        <!-- Secção de As Minhas Disciplinas -->
+        <div class="container">
+            <h2>As Minhas Disciplinas</h2>
+            
+            <div class="form-nova-disciplina">
+                <input type="text" id="nova-disciplina" placeholder="Nome da cadeira (Ex: Cálculo I)">
+                <div class="form-linha-extra">
+                    <select id="semestre-disciplina">
+                        <option value="1.º Semestre">1.º Semestre</option>
+                        <option value="2.º Semestre">2.º Semestre</option>
+                        <option value="Anual">Anual</option>
+                    </select>
+                    <input type="number" id="meta-disciplina" placeholder="Meta (h)" min="1" value="30" title="Meta em horas">
+                    <button onclick="adicionarDisciplina()">Adicionar</button>
+                </div>
+            </div>
+
+            <p id="msg-sem-disciplinas-lista" class="texto-vazio">Ainda não tens disciplinas para estudar</p>
+            <ul id="lista-disciplinas" class="lista-disciplinas"></ul>
+        </div>
+
+        <!-- Secção de Registos (Apenas Histórico por agora) -->
+        <div class="container" style="text-align: center;">
+            <h3>Registos</h3>
+            <div class="backup-group">
+                <button class="btn-secundario" onclick="abrirHistoricoGeral()" style="width: 100%;">📜 Histórico de Sessões</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ECRÃ 2: MODO FOCO (CRONÓMETRO EM ECRÃ CHEIO) -->
+    <div id="ecra-foco" class="ecra-foco" style="display: none;">
+        <div class="foco-conteudo">
+            <span id="foco-semestre" class="foco-badge">1.º Semestre</span>
+            <h2 id="foco-titulo" class="foco-titulo">Nome da Cadeira</h2>
+            <p id="foco-estado" class="foco-estado">A contar tempo de estudo...</p>
+
+            <div class="foco-cronometro" id="display-tempo">00:00:00</div>
+
+            <div class="foco-nota-box">
+                <input type="text" id="foco-nota" placeholder="Opcional: O que estás a estudar? (Ex: Cap. 2)">
+            </div>
+
+            <div class="foco-controlos">
+                <button id="btn-pausar" class="btn-pausar" onclick="alternarPausa()">⏸ Pausar</button>
+                <button id="btn-parar" class="btn-concluir" onclick="pararCronometro()">✅ Concluir e Guardar</button>
+            </div>
+
+            <button class="btn-descartar" onclick="descartarSessao()">✖ Descartar sessão (não guardar)</button>
+        </div>
+    </div>
+
+    <!-- ECRÃ 3: RELATÓRIO DA DISCIPLINA -->
+    <div id="ecra-relatorio" style="display: none;">
+        <button class="btn-voltar" onclick="voltarPrincipal()">⬅ Voltar</button>
+        
+        <div class="container">
+            <span id="rel-semestre" class="badge-semestre">1.º Semestre</span>
+            <h2 id="rel-titulo" style="margin-top: 10px; margin-bottom: 18px;">Nome da Cadeira</h2>
+            
+            <div class="cards-metricas">
+                <div class="metrica-box">
+                    <span class="metrica-label">Tempo Estudado</span>
+                    <strong id="rel-estudado" class="metrica-valor destaque-verde">0s</strong>
+                </div>
+                <div class="metrica-box">
+                    <span class="metrica-label">Ainda Falta</span>
+                    <strong id="rel-falta" class="metrica-valor">30h 0m</strong>
+                </div>
+                <div class="metrica-box">
+                    <span class="metrica-label">Meta Total</span>
+                    <strong id="rel-meta" class="metrica-valor">30h</strong>
+                </div>
+            </div>
+
+            <div class="progresso-container">
+                <div class="progresso-texto">
+                    <span>Progresso da Meta</span>
+                    <strong id="rel-percentagem">0%</strong>
+                </div>
+                <div class="barra-fundo">
+                    <div id="rel-barra-progresso" class="barra-preenchida" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <h3>Comparação entre Cadeiras</h3>
+            <p class="subtitulo-card">Percentagem do teu tempo total de estudo.</p>
+            <div id="grafico-comparativo" class="grafico-container"></div>
+        </div>
+
+        <div class="container">
+            <h3>Sessões desta Cadeira</h3>
+            <p class="subtitulo-card">Podes eliminar sessões antigas ou de teste.</p>
+            <ul id="lista-sessoes-disciplina" class="lista-sessoes"></ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button id="btn-apagar-relatorio" class="btn-perigo" style="font-size: 14px;">🗑️ Apagar esta disciplina</button>
+        </div>
+    </div>
+
+    <!-- ECRÃ 4: HISTÓRICO GERAL DE SESSÕES -->
+    <div id="ecra-historico" style="display: none;">
+        <button class="btn-voltar" onclick="voltarPrincipal()">⬅ Voltar</button>
+        
+        <div class="container">
+            <h2>Histórico de Sessões</h2>
+            <p class="subtitulo-card">Todas as sessões registadas (da mais recente para a mais antiga).</p>
+            <ul id="lista-sessoes-geral" class="lista-sessoes"></ul>
+        </div>
+    </div>
+
+    <div class="status" id="status-app">A carregar...</div>
+    <script src="app.js"></script>
+</body>
+</html>

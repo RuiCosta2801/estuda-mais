@@ -1,0 +1,454 @@
+:root {
+    --bg-fundo: #0b1120;        /* Azul Noite Profundo */
+    --bg-card: #131c31;         /* Ardósia Elevado */
+    --bg-input: #1e293b;        /* Ardósia Médio */
+    --borda-subtil: #27354f;    /* Contorno discreto */
+    --texto-principal: #f1f5f9; /* Branco Gelo suave */
+    --texto-secundario: #94a3b8;/* Cinzento Azulado */
+    --primaria: #6366f1;        /* Índigo Foco */
+    --primaria-hover: #4f46e5;  /* Índigo Intenso */
+    --sucesso: #10b981;         /* Esmeralda Desempenho */
+    --aviso: #f59e0b;           /* Âmbar Pausa */
+    --perigo: #ef4444;          /* Vermelho Alerta */
+}
+
+body { 
+    font-family: system-ui, -apple-system, sans-serif; 
+    margin: 0 auto; 
+    max-width: 600px; 
+    padding: 20px; 
+    background-color: var(--bg-fundo); 
+    color: var(--texto-principal); 
+}
+
+header { text-align: center; margin-bottom: 24px; }
+h1 { color: var(--texto-principal); margin: 0; font-size: 28px; letter-spacing: -0.5px; }
+h1 span { color: var(--primaria); }
+h2, h3 { color: var(--texto-principal); margin-top: 0; }
+
+.subtitulo-card {
+    font-size: 13px;
+    color: var(--texto-secundario);
+    margin-top: -10px;
+    margin-bottom: 16px;
+}
+
+.container { 
+    background-color: var(--bg-card); 
+    padding: 20px; 
+    border-radius: 14px; 
+    border: 1px solid var(--borda-subtil);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); 
+    margin-bottom: 20px; 
+}
+
+/* Notificação Animada de Conquista */
+.toast-conquista {
+    position: fixed;
+    top: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 420px;
+    background: linear-gradient(135deg, #4f46e5, #059669);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 2000;
+    cursor: pointer;
+    opacity: 0;
+    transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+}
+.toast-conquista.visivel {
+    top: 20px;
+    opacity: 1;
+}
+.toast-icone {
+    font-size: 32px;
+    animation: saltoTrofeu 0.8s ease infinite alternate;
+}
+@keyframes saltoTrofeu {
+    from { transform: scale(1) rotate(-5deg); }
+    to { transform: scale(1.15) rotate(5deg); }
+}
+.toast-conteudo strong {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 3px;
+}
+.toast-conteudo p {
+    margin: 0;
+    font-size: 13px;
+    color: #e2e8f0;
+}
+
+/* Mensagem de estado vazio */
+.texto-vazio {
+    color: var(--texto-secundario);
+    font-style: italic;
+    text-align: center;
+    padding: 15px 0;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Botões de seleção no Cronómetro */
+.grid-botoes-disciplinas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+.btn-escolha-disciplina {
+    background-color: var(--bg-input);
+    color: var(--texto-principal);
+    border: 1px solid var(--borda-subtil);
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-escolha-disciplina:hover {
+    border-color: var(--primaria);
+}
+.btn-escolha-disciplina.selecionada {
+    background-color: var(--primaria);
+    color: white;
+    border-color: #818cf8;
+    font-weight: 600;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.45);
+}
+
+/* Formulário Nova Disciplina */
+.form-nova-disciplina {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.form-linha-extra {
+    display: flex;
+    gap: 8px;
+}
+input[type="text"], input[type="number"], select { 
+    padding: 11px 12px; 
+    background-color: var(--bg-input);
+    color: var(--texto-principal);
+    border: 1px solid var(--borda-subtil); 
+    border-radius: 8px; 
+    font-size: 15px; 
+    outline: none;
+    transition: border-color 0.2s;
+}
+input[type="text"]:focus, input[type="number"]:focus, select:focus {
+    border-color: var(--primaria);
+}
+input::placeholder {
+    color: var(--texto-secundario);
+}
+input[type="text"] { width: 100%; box-sizing: border-box; }
+.form-linha-extra select { flex: 2; }
+.form-linha-extra input[type="number"] { flex: 1; width: 80px; }
+
+/* Botões Gerais */
+button { 
+    padding: 11px 16px; 
+    background-color: var(--primaria); 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-size: 15px; 
+    font-weight: 600; 
+    transition: background-color 0.2s, transform 0.1s;
+}
+button:hover:not(:disabled) {
+    background-color: var(--primaria-hover);
+}
+button:active:not(:disabled) {
+    transform: scale(0.98);
+}
+button:disabled { 
+    background-color: var(--bg-input); 
+    color: #475569;
+    border: 1px solid var(--borda-subtil);
+    cursor: not-allowed; 
+}
+.btn-perigo { 
+    background-color: rgba(239, 68, 68, 0.15); 
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.btn-perigo:hover:not(:disabled) {
+    background-color: var(--perigo);
+    color: white;
+}
+.btn-secundario { 
+    background-color: var(--bg-input); 
+    color: var(--texto-principal);
+    border: 1px solid var(--borda-subtil);
+    font-size: 14px; 
+}
+.btn-secundario:hover:not(:disabled) {
+    background-color: #27354f;
+    border-color: var(--primaria);
+}
+.btn-voltar { 
+    background-color: var(--bg-card); 
+    color: var(--texto-principal);
+    border: 1px solid var(--borda-subtil);
+    margin-bottom: 16px; 
+    font-size: 14px; 
+    padding: 8px 14px; 
+}
+.btn-voltar:hover {
+    border-color: var(--primaria);
+    background-color: var(--bg-input);
+}
+
+/* Lista de Disciplinas */
+.lista-disciplinas { list-style: none; padding: 0; margin: 0; }
+.disciplina-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 14px 12px; 
+    border-bottom: 1px solid var(--borda-subtil); 
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.15s;
+}
+.disciplina-item:last-child {
+    border-bottom: none;
+}
+.disciplina-item:hover { background-color: var(--bg-input); }
+.disciplina-info { display: flex; flex-direction: column; gap: 6px; }
+.badge-semestre {
+    display: inline-block;
+    background-color: rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 12px;
+    width: fit-content;
+}
+.btn-seta {
+    background: none;
+    color: var(--primaria);
+    font-size: 18px;
+    padding: 5px 10px;
+}
+
+/* ECRÃ MODO FOCO (UNIFORMIZADO COM O TEMA ESCURO) */
+.ecra-foco {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-fundo);
+    color: var(--texto-principal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.foco-conteudo {
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.foco-badge {
+    background-color: rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+.foco-titulo {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    color: var(--texto-principal);
+}
+.foco-estado {
+    margin: 0;
+    font-size: 14px;
+    color: var(--texto-secundario);
+}
+.foco-estado.pausado {
+    color: var(--aviso);
+    font-weight: 600;
+}
+.foco-cronometro {
+    font-size: 62px;
+    font-weight: bold;
+    font-family: monospace;
+    color: var(--primaria);
+    margin: 35px 0;
+    letter-spacing: 2px;
+    text-shadow: 0 0 28px rgba(99, 102, 241, 0.45);
+}
+.foco-cronometro.pausado {
+    color: var(--aviso);
+    text-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+}
+.foco-nota-box {
+    width: 100%;
+    margin-bottom: 25px;
+}
+.foco-nota-box input {
+    background-color: var(--bg-card);
+    border: 1px solid var(--borda-subtil);
+    color: var(--texto-principal);
+    text-align: center;
+    border-radius: 10px;
+    padding: 13px;
+}
+.foco-controlos {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 25px;
+}
+.btn-pausar {
+    flex: 1;
+    background-color: var(--bg-card);
+    color: var(--aviso);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    padding: 14px;
+    border-radius: 10px;
+}
+.btn-pausar:hover:not(:disabled) {
+    background-color: rgba(245, 158, 11, 0.15);
+}
+.btn-pausar.retomar {
+    background-color: var(--primaria);
+    color: white;
+    border: none;
+}
+.btn-concluir {
+    flex: 1;
+    background-color: var(--sucesso);
+    color: #06281e;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 10px;
+}
+.btn-concluir:hover:not(:disabled) {
+    background-color: #34d399;
+}
+.btn-descartar {
+    background: none;
+    color: var(--texto-secundario);
+    font-size: 13px;
+    font-weight: normal;
+    text-decoration: underline;
+    padding: 8px;
+}
+.btn-descartar:hover {
+    color: var(--perigo);
+    background: none;
+}
+
+/* Página de Relatório */
+.cards-metricas {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.metrica-box {
+    background-color: var(--bg-input);
+    padding: 14px 8px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid var(--borda-subtil);
+}
+.metrica-label { display: block; font-size: 11px; color: var(--texto-secundario); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.metrica-valor { font-size: 16px; color: var(--texto-principal); }
+.metrica-valor.destaque-verde { color: var(--sucesso); }
+
+.progresso-container { margin-top: 10px; }
+.progresso-texto { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: var(--texto-secundario); }
+.progresso-texto strong { color: var(--texto-principal); }
+.barra-fundo { width: 100%; height: 10px; background-color: var(--bg-input); border-radius: 6px; overflow: hidden; }
+.barra-preenchida { height: 100%; background: linear-gradient(90deg, var(--primaria), var(--sucesso)); transition: width 0.4s ease; }
+
+/* Gráfico Comparativo */
+.grafico-container { display: flex; flex-direction: column; gap: 14px; }
+.grafico-linha { display: flex; flex-direction: column; gap: 6px; }
+.grafico-cabecalho { display: flex; justify-content: space-between; font-size: 13px; color: var(--texto-secundario); }
+.grafico-barra-fundo { width: 100%; height: 14px; background-color: var(--bg-input); border-radius: 6px; overflow: hidden; }
+.grafico-barra { height: 100%; background-color: #475569; border-radius: 6px; transition: width 0.4s ease; }
+.grafico-barra.destaque { background: linear-gradient(90deg, var(--primaria), #818cf8); box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+
+/* Lista de Sessões (Histórico) */
+.lista-sessoes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sessao-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--borda-subtil);
+    gap: 10px;
+}
+.sessao-item:last-child {
+    border-bottom: none;
+}
+.sessao-detalhes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.sessao-titulo {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--texto-principal);
+}
+.sessao-meta {
+    font-size: 12px;
+    color: var(--texto-secundario);
+}
+.sessao-nota {
+    font-size: 12px;
+    color: #a5b4fc;
+    font-style: italic;
+}
+.btn-apagar-sessao {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.btn-apagar-sessao:hover {
+    background-color: var(--perigo);
+    color: white;
+}
+
+.status { font-size: 12px; color: #64748b; text-align: center; margin-top: 20px; }
+.backup-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
