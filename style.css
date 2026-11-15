@@ -12,6 +12,10 @@
     --perigo: #ef4444;          /* Vermelho Alerta */
 }
 
+* {
+    box-sizing: border-box;
+}
+
 body { 
     font-family: system-ui, -apple-system, sans-serif; 
     margin: 0 auto; 
@@ -21,9 +25,39 @@ body {
     color: var(--texto-principal); 
 }
 
-header { text-align: center; margin-bottom: 24px; }
+/* Cabeçalho e Perfil */
+header { margin-bottom: 22px; }
+.header-topo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
 h1 { color: var(--texto-principal); margin: 0; font-size: 28px; letter-spacing: -0.5px; }
 h1 span { color: var(--primaria); }
+
+.btn-perfil {
+    position: absolute;
+    right: 0;
+    background-color: var(--bg-card);
+    color: var(--texto-secundario);
+    border: 1px solid var(--borda-subtil);
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 20px;
+}
+.btn-perfil:hover {
+    color: var(--texto-principal);
+    border-color: var(--primaria);
+    background-color: var(--bg-input);
+}
+.header-saudacao {
+    text-align: center;
+    margin: 6px 0 0 0;
+    font-size: 13px;
+    color: var(--texto-secundario);
+}
+
 h2, h3 { color: var(--texto-principal); margin-top: 0; }
 
 .subtitulo-card {
@@ -42,10 +76,129 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
     margin-bottom: 20px; 
 }
 
+/* Ecrã de Login / Edição Perfil */
+.login-container {
+    margin-top: 10px;
+}
+.login-icone {
+    font-size: 42px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+.campo-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+.campo-grupo label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texto-secundario);
+}
+
+/* Página de Perfil e Conquistas */
+.perfil-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 18px;
+}
+.perfil-avatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primaria), var(--sucesso));
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.perfil-dados-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+.perfil-dado-item {
+    background-color: var(--bg-input);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--borda-subtil);
+}
+.dado-label {
+    display: block;
+    font-size: 11px;
+    color: var(--texto-secundario);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+.perfil-dado-item strong {
+    font-size: 14px;
+    color: var(--texto-principal);
+}
+
+/* Grid de Conquistas */
+.grid-conquistas {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+.conquista-card {
+    background-color: var(--bg-input);
+    border: 1px solid var(--borda-subtil);
+    border-radius: 12px;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    opacity: 0.45;
+    filter: grayscale(100%);
+    transition: all 0.3s ease;
+}
+.conquista-card.desbloqueada {
+    opacity: 1;
+    filter: none;
+    border-color: rgba(16, 185, 129, 0.5);
+    background: linear-gradient(145deg, rgba(99, 102, 241, 0.12), rgba(16, 185, 129, 0.12));
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);
+}
+.conquista-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.conquista-emoji {
+    font-size: 24px;
+}
+.conquista-status {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sucesso);
+}
+.conquista-titulo {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--texto-principal);
+}
+.conquista-desc {
+    font-size: 11px;
+    color: var(--texto-secundario);
+    line-height: 1.3;
+}
+.conquista-detalhe-extra {
+    font-size: 11px;
+    font-weight: 600;
+    color: #a5b4fc;
+    margin-top: 2px;
+}
+
 /* Notificação Animada de Conquista */
 .toast-conquista {
     position: fixed;
-    top: -120px;
+    top: -140px;
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
@@ -97,22 +250,25 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
     font-size: 14px;
 }
 
-/* Botões de seleção no Cronómetro */
+/* Cartões Quadrados Alinhados à Esquerda (Seleção no Cronómetro) */
 .grid-botoes-disciplinas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
     margin-bottom: 10px;
 }
 .btn-escolha-disciplina {
     background-color: var(--bg-input);
     color: var(--texto-principal);
     border: 1px solid var(--borda-subtil);
-    padding: 10px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
+    padding: 14px;
+    border-radius: 10px;
+    min-height: 76px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -123,8 +279,21 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
     background-color: var(--primaria);
     color: white;
     border-color: #818cf8;
-    font-weight: 600;
     box-shadow: 0 0 15px rgba(99, 102, 241, 0.45);
+}
+.card-escolha-nome {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    word-break: break-word;
+}
+.card-escolha-tempo {
+    font-size: 11px;
+    color: var(--texto-secundario);
+    margin-top: 8px;
+}
+.btn-escolha-disciplina.selecionada .card-escolha-tempo {
+    color: #e0e7ff;
 }
 
 /* Formulário Nova Disciplina */
@@ -132,13 +301,16 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-bottom: 18px;
+    margin-bottom: 22px;
+    width: 100%;
 }
 .form-linha-extra {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 75px auto;
     gap: 8px;
+    width: 100%;
 }
-input[type="text"], input[type="number"], select { 
+input[type="text"], input[type="number"], input[type="date"], select { 
     padding: 11px 12px; 
     background-color: var(--bg-input);
     color: var(--texto-principal);
@@ -146,17 +318,95 @@ input[type="text"], input[type="number"], select {
     border-radius: 8px; 
     font-size: 15px; 
     outline: none;
+    width: 100%;
+    min-width: 0;
+    font-family: inherit;
     transition: border-color 0.2s;
 }
-input[type="text"]:focus, input[type="number"]:focus, select:focus {
+input[type="date"] {
+    color-scheme: dark;
+}
+input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus {
     border-color: var(--primaria);
 }
 input::placeholder {
     color: var(--texto-secundario);
 }
-input[type="text"] { width: 100%; box-sizing: border-box; }
-.form-linha-extra select { flex: 2; }
-.form-linha-extra input[type="number"] { flex: 1; width: 80px; }
+.btn-adicionar {
+    white-space: nowrap;
+    padding: 11px 14px;
+}
+
+/* Linha Temporal de Semestres (As Minhas Cadeiras) */
+.timeline-container {
+    position: relative;
+    padding-left: 20px;
+    border-left: 2px solid var(--borda-subtil);
+    margin-left: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.timeline-bloco {
+    position: relative;
+}
+.timeline-ponto {
+    position: absolute;
+    left: -27px;
+    top: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--primaria);
+    border: 2px solid var(--bg-card);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
+}
+.timeline-cabecalho {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #a5b4fc;
+    margin-bottom: 10px;
+}
+.timeline-lista {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.disciplina-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 12px 14px; 
+    background-color: var(--bg-input);
+    border: 1px solid var(--borda-subtil);
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.15s ease;
+}
+.disciplina-item:hover { 
+    border-color: var(--primaria);
+    background-color: #243147;
+}
+.disciplina-info { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 3px; 
+}
+.disciplina-subtexto {
+    font-size: 12px;
+    color: var(--texto-secundario);
+}
+.btn-seta {
+    background: none;
+    color: var(--primaria);
+    font-size: 18px;
+    padding: 4px 8px;
+}
 
 /* Botões Gerais */
 button { 
@@ -214,23 +464,6 @@ button:disabled {
     background-color: var(--bg-input);
 }
 
-/* Lista de Disciplinas */
-.lista-disciplinas { list-style: none; padding: 0; margin: 0; }
-.disciplina-item { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 14px 12px; 
-    border-bottom: 1px solid var(--borda-subtil); 
-    cursor: pointer;
-    border-radius: 8px;
-    transition: background-color 0.15s;
-}
-.disciplina-item:last-child {
-    border-bottom: none;
-}
-.disciplina-item:hover { background-color: var(--bg-input); }
-.disciplina-info { display: flex; flex-direction: column; gap: 6px; }
 .badge-semestre {
     display: inline-block;
     background-color: rgba(99, 102, 241, 0.15);
@@ -238,18 +471,12 @@ button:disabled {
     border: 1px solid rgba(99, 102, 241, 0.3);
     font-size: 11px;
     font-weight: 600;
-    padding: 2px 9px;
+    padding: 3px 10px;
     border-radius: 12px;
     width: fit-content;
 }
-.btn-seta {
-    background: none;
-    color: var(--primaria);
-    font-size: 18px;
-    padding: 5px 10px;
-}
 
-/* ECRÃ MODO FOCO (UNIFORMIZADO COM O TEMA ESCURO) */
+/* ECRÃ MODO FOCO */
 .ecra-foco {
     position: fixed;
     top: 0;
@@ -263,7 +490,6 @@ button:disabled {
     justify-content: center;
     z-index: 1500;
     padding: 20px;
-    box-sizing: border-box;
 }
 .foco-conteudo {
     width: 100%;
@@ -450,5 +676,4 @@ button:disabled {
     color: white;
 }
 
-.status { font-size: 12px; color: #64748b; text-align: center; margin-top: 20px; }
 .backup-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }

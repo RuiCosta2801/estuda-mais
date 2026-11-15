@@ -26,31 +26,72 @@
         </div>
     </div>
 
+    <!-- CABEÇALHO -->
     <header id="app-header">
-        <h1>Estuda<span>+</span></h1>
+        <div class="header-topo">
+            <h1>Estuda<span>+</span></h1>
+            <button id="btn-abrir-perfil" class="btn-perfil" onclick="abrirPaginaPerfil()" style="display: none;">👤 Perfil</button>
+        </div>
+        <p id="header-saudacao" class="header-saudacao" style="display: none;"></p>
     </header>
 
+    <!-- ECRÃ 0: CONFIGURAÇÃO / EDIÇÃO DE DADOS DO PERFIL -->
+    <div id="ecra-login" style="display: none;">
+        <button id="btn-cancelar-edicao-perfil" class="btn-voltar" onclick="abrirPaginaPerfil()" style="display: none;">⬅ Cancelar</button>
+        
+        <div class="container login-container">
+            <div class="login-icone">🎓</div>
+            <h2 id="titulo-form-perfil" style="text-align: center; margin-bottom: 6px;">Bem-vindo ao Estuda+</h2>
+            <p class="subtitulo-card" style="text-align: center; margin-top: 0;">Preenche os teus dados apenas uma vez para personalizar a app.</p>
+
+            <div class="campo-grupo">
+                <label for="perfil-nome">Nome</label>
+                <input type="text" id="perfil-nome" placeholder="Ex: Rui Costa">
+            </div>
+
+            <div class="campo-grupo">
+                <label for="perfil-nascimento">Data de Nascimento</label>
+                <input type="date" id="perfil-nascimento">
+            </div>
+
+            <div class="campo-grupo">
+                <label for="perfil-nivel">Nível de Ensino</label>
+                <select id="perfil-nivel" onchange="atualizarOpcoesAno()">
+                    <option value="normal">Ensino Normal (Primário, Básico e Secundário)</option>
+                    <option value="superior">Ensino Superior (Licenciatura / Mestrado)</option>
+                </select>
+            </div>
+
+            <div class="campo-grupo">
+                <label for="perfil-ano">Ano de Ensino</label>
+                <select id="perfil-ano"></select>
+            </div>
+
+            <button onclick="guardarPerfil()" style="width: 100%; padding: 14px; margin-top: 10px; font-size: 16px;">Guardar e Continuar ➔</button>
+        </div>
+    </div>
+
     <!-- ECRÃ 1: PRINCIPAL (HOME) -->
-    <div id="ecra-principal">
+    <div id="ecra-principal" style="display: none;">
         
         <!-- Secção de Seleção para Estudar -->
-        <div class="container" style="text-align: center;">
+        <div class="container">
             <h2>O que vais estudar agora?</h2>
             
             <p id="msg-sem-disciplinas-topo" class="texto-vazio">Ainda não tens disciplinas para estudar</p>
             <div id="botoes-selecao-disciplinas" class="grid-botoes-disciplinas"></div>
             
-            <div style="margin-top: 22px;">
+            <div style="margin-top: 20px;">
                 <button id="btn-iniciar" onclick="iniciarCronometro()" disabled style="width: 100%; padding: 14px; font-size: 16px;">▶ Iniciar Sessão de Estudo</button>
             </div>
         </div>
 
-        <!-- Secção de As Minhas Disciplinas -->
+        <!-- Secção de As Minhas Disciplinas / Cadeiras (Linha Temporal) -->
         <div class="container">
-            <h2>As Minhas Disciplinas</h2>
+            <h2 id="titulo-minhas-materias">As Minhas Disciplinas</h2>
             
             <div class="form-nova-disciplina">
-                <input type="text" id="nova-disciplina" placeholder="Nome da cadeira (Ex: Cálculo I)">
+                <input type="text" id="nova-disciplina" placeholder="Nome da disciplina (Ex: Matemática)">
                 <div class="form-linha-extra">
                     <select id="semestre-disciplina">
                         <option value="1.º Semestre">1.º Semestre</option>
@@ -58,15 +99,15 @@
                         <option value="Anual">Anual</option>
                     </select>
                     <input type="number" id="meta-disciplina" placeholder="Meta (h)" min="1" value="30" title="Meta em horas">
-                    <button onclick="adicionarDisciplina()">Adicionar</button>
+                    <button class="btn-adicionar" onclick="adicionarDisciplina()">Adicionar</button>
                 </div>
             </div>
 
             <p id="msg-sem-disciplinas-lista" class="texto-vazio">Ainda não tens disciplinas para estudar</p>
-            <ul id="lista-disciplinas" class="lista-disciplinas"></ul>
+            <div id="timeline-disciplinas" class="timeline-container"></div>
         </div>
 
-        <!-- Secção de Registos (Apenas Histórico por agora) -->
+        <!-- Secção de Registos -->
         <div class="container" style="text-align: center;">
             <h3>Registos</h3>
             <div class="backup-group">
@@ -98,7 +139,7 @@
         </div>
     </div>
 
-    <!-- ECRÃ 3: RELATÓRIO DA DISCIPLINA -->
+    <!-- ECRÃ 3: RELATÓRIO DA DISCIPLINA / CADEIRA -->
     <div id="ecra-relatorio" style="display: none;">
         <button class="btn-voltar" onclick="voltarPrincipal()">⬅ Voltar</button>
         
@@ -133,13 +174,13 @@
         </div>
 
         <div class="container">
-            <h3>Comparação entre Cadeiras</h3>
+            <h3 id="titulo-comparacao-materias">Comparação entre Disciplinas</h3>
             <p class="subtitulo-card">Percentagem do teu tempo total de estudo.</p>
             <div id="grafico-comparativo" class="grafico-container"></div>
         </div>
 
         <div class="container">
-            <h3>Sessões desta Cadeira</h3>
+            <h3 id="titulo-sessoes-materia">Sessões desta Disciplina</h3>
             <p class="subtitulo-card">Podes eliminar sessões antigas ou de teste.</p>
             <ul id="lista-sessoes-disciplina" class="lista-sessoes"></ul>
         </div>
@@ -160,7 +201,47 @@
         </div>
     </div>
 
-    <div class="status" id="status-app">A carregar...</div>
+    <!-- ECRÃ 5: PERFIL E CONQUISTAS -->
+    <div id="ecra-perfil" style="display: none;">
+        <button class="btn-voltar" onclick="voltarPrincipal()">⬅ Voltar</button>
+        
+        <div class="container">
+            <div class="perfil-cabecalho">
+                <div class="perfil-avatar" id="perfil-avatar-inicial">R</div>
+                <div>
+                    <h2 id="view-perfil-nome" style="margin: 0 0 4px 0;">Nome</h2>
+                    <span id="view-perfil-nivel-badge" class="badge-semestre">Ensino Superior</span>
+                </div>
+            </div>
+
+            <div class="perfil-dados-grid">
+                <div class="perfil-dado-item">
+                    <span class="dado-label">Data de Nascimento</span>
+                    <strong id="view-perfil-nascimento">--/--/----</strong>
+                </div>
+                <div class="perfil-dado-item">
+                    <span class="dado-label">Idade</span>
+                    <strong id="view-perfil-idade">-- anos</strong>
+                </div>
+                <div class="perfil-dado-item" style="grid-column: span 2;">
+                    <span class="dado-label">Ano de Ensino</span>
+                    <strong id="view-perfil-ano">--</strong>
+                </div>
+            </div>
+
+            <button class="btn-secundario" onclick="abrirEdicaoPerfil()" style="width: 100%; margin-top: 16px;">✏️ Alterar dados do perfil</button>
+        </div>
+
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="margin: 0;">🏆 As Minhas Conquistas</h3>
+                <span id="contador-conquistas" class="badge-semestre">0 / 12</span>
+            </div>
+            <p class="subtitulo-card">Desbloqueia troféus à medida que acumulas horas de foco.</p>
+            <div id="grid-conquistas" class="grid-conquistas"></div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
