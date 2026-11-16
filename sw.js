@@ -1,45 +1,52 @@
-const CACHE_NAME = 'estuda-mais-v1';
-const ASSETS = [
-  './',
-  './index.html',
-  './style.css',
-  './manifest.json',
-  './app.js',
-  './icon-192.png',
-  './icon-512.png'
+const CACHE_NAME = 'estuda-plus-cache';
+
+const FICHEIROS_APP = [
+    './',
+    './index.html',
+    './style.css',
+    './app.js',
+    './manifest.json',
+    './icon-192.png',
+    './icon-512.png'
 ];
 
-self.addEventListener('install', (e) => {
-  self.skipWaiting(); // Força o novo SW a ativar imediatamente
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
-});
-
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(FICHEIROS_APP);
         })
-      );
-    })
-  );
+    );
 });
 
-// Estratégia Network-First: Tenta a internet primeiro; se falhar (offline), usa a cache
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    fetch(e.request)
-      .then((response) => {
-        // Atualiza a cache com a versão mais recente
-        const resClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
-        return response;
-      })
-      .catch(() => caches.match(e.request))
-  );
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((nomesCaches) => {
+            return Promise.all(
+                nomesCaches
+                    .filter((nome) => nome !== CACHE_NAME)
+                    .map((nome) => caches.delete(nome))
+            );
+        }).then(() => self.clients.claim())
+    );
+});
+
+self.addEventListener('fetch', (event) => {
+    if (event.request.method !== 'GET') return;
+
+    event.respondWith(
+        fetch(event.request, { cache: 'no-store' })
+            .then((respostaRede) => {
+                if (respostaRede && respostaRede.status === 200) {
+                    const copiaResposta = respostaRede.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, copiaResposta);
+                    });
+                }
+                return respostaRede;
+            })
+            .catch(() => {
+                return caches.match(event.request);
+            })
+    );
 });

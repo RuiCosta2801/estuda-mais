@@ -40,7 +40,7 @@ body.modo-foco-ativo {
 }
 
 /* Cabeçalho e Perfil */
-header { margin-bottom: 22px; }
+header { margin-bottom: 20px; }
 .header-topo {
     display: flex;
     justify-content: center;
@@ -70,6 +70,40 @@ h1 span { color: var(--primaria); }
     margin: 6px 0 0 0;
     font-size: 13px;
     color: var(--texto-secundario);
+}
+
+/* Resumo Rápido no Topo */
+.resumo-topo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.resumo-mini-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--borda-subtil);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+}
+.resumo-mini-label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--texto-secundario);
+    margin-bottom: 4px;
+}
+.resumo-mini-valor {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--texto-principal);
+}
+.resumo-mini-valor.destaque-indigo {
+    color: #818cf8;
+}
+.resumo-mini-valor.destaque-verde {
+    color: var(--sucesso);
 }
 
 h2, h3 { color: var(--texto-principal); margin-top: 0; }
@@ -192,12 +226,13 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
     margin-bottom: 2px;
 }
 .conquista-simbolo {
-    width: 28px;
+    min-width: 30px;
     height: 28px;
+    padding: 0 6px;
     border-radius: 8px;
     background-color: rgba(99, 102, 241, 0.18);
     color: #a5b4fc;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -672,6 +707,19 @@ button:disabled {
 }
 
 /* Página de Relatório */
+.progresso-semanal-box {
+    background-color: var(--bg-input);
+    border: 1px solid var(--borda-subtil);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+.barra-preenchida-semanal {
+    height: 100%;
+    background-color: var(--primaria);
+    transition: width 0.4s ease;
+}
+
 .cards-metricas {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -694,6 +742,15 @@ button:disabled {
 .progresso-texto strong { color: var(--texto-principal); }
 .barra-fundo { width: 100%; height: 10px; background-color: var(--bg-input); border-radius: 6px; overflow: hidden; }
 .barra-preenchida { height: 100%; background: linear-gradient(90deg, var(--primaria), var(--sucesso)); transition: width 0.4s ease; }
+
+/* Box Registo Manual */
+.box-manual {
+    background-color: var(--bg-input);
+    border: 1px solid var(--borda-subtil);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
 
 /* Gráfico Comparativo */
 .grafico-container { display: flex; flex-direction: column; gap: 14px; }

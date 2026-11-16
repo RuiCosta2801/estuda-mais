@@ -74,6 +74,22 @@
     <!-- ECRÃ 1: PRINCIPAL (HOME) -->
     <div id="ecra-principal" style="display: none;">
         
+        <!-- Resumo Rápido de Desempenho -->
+        <div class="resumo-topo-grid">
+            <div class="resumo-mini-card">
+                <span class="resumo-mini-label">Hoje</span>
+                <strong id="resumo-hoje" class="resumo-mini-valor">0s</strong>
+            </div>
+            <div class="resumo-mini-card">
+                <span class="resumo-mini-label">Esta Semana</span>
+                <strong id="resumo-semana" class="resumo-mini-valor destaque-indigo">0s</strong>
+            </div>
+            <div class="resumo-mini-card">
+                <span class="resumo-mini-label">Sequência</span>
+                <strong id="resumo-streak" class="resumo-mini-valor destaque-verde">0 dias</strong>
+            </div>
+        </div>
+
         <!-- Secção de Seleção para Estudar -->
         <div class="container">
             <h2>O que vais estudar agora?</h2>
@@ -145,8 +161,31 @@
 
     <!-- ECRÃ 3: RELATÓRIO DA DISCIPLINA / CADEIRA -->
     <div id="ecra-relatorio" style="display: none;">
-        <button class="btn-voltar" onclick="voltarPrincipal()">← Voltar</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <button class="btn-voltar" style="margin-bottom: 0;" onclick="voltarPrincipal()">← Voltar</button>
+            <button class="btn-secundario" style="padding: 8px 14px;" onclick="alternarFormularioEdicaoDisciplina()">Editar</button>
+        </div>
         
+        <!-- Formulário Oculto de Edição da Disciplina -->
+        <div id="box-editar-disciplina" class="container" style="display: none; border-color: var(--primaria);">
+            <h3 style="margin-bottom: 12px;">Editar Detalhes</h3>
+            <div class="campo-grupo">
+                <label for="edit-disc-nome">Nome</label>
+                <input type="text" id="edit-disc-nome">
+            </div>
+            <div class="form-linha-dupla" id="edit-grupo-periodo-horas" style="margin-bottom: 14px;">
+                <select id="edit-disc-semestre">
+                    <option value="1.º Semestre">1.º Semestre</option>
+                    <option value="2.º Semestre">2.º Semestre</option>
+                </select>
+                <input type="number" id="edit-disc-horas" placeholder="Horas/semana" min="1" max="60">
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-secundario" onclick="alternarFormularioEdicaoDisciplina()" style="flex: 1;">Cancelar</button>
+                <button onclick="guardarEdicaoDisciplina()" style="flex: 1;">Guardar</button>
+            </div>
+        </div>
+
         <div class="container">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <span id="rel-semestre" class="badge-semestre">1.º Semestre</span>
@@ -154,6 +193,17 @@
             </div>
             <h2 id="rel-titulo" style="margin-top: 12px; margin-bottom: 18px;">Nome da Cadeira</h2>
             
+            <!-- Progresso Desta Semana -->
+            <div class="progresso-semanal-box">
+                <div class="progresso-texto" style="margin-bottom: 6px;">
+                    <span>Esta Semana (<strong id="rel-semanal-detalhe" style="color: var(--texto-principal);">0s / 3h</strong>)</span>
+                    <strong id="rel-semanal-percentagem" style="color: #818cf8;">0%</strong>
+                </div>
+                <div class="barra-fundo">
+                    <div id="rel-semanal-barra" class="barra-preenchida-semanal" style="width: 0%;"></div>
+                </div>
+            </div>
+
             <div class="cards-metricas">
                 <div class="metrica-box">
                     <span class="metrica-label">Estudado</span>
@@ -171,7 +221,7 @@
 
             <div class="progresso-container">
                 <div class="progresso-texto">
-                    <span>Progresso do Período</span>
+                    <span>Progresso Total do Período</span>
                     <strong id="rel-percentagem">0%</strong>
                 </div>
                 <div class="barra-fundo">
@@ -187,8 +237,28 @@
         </div>
 
         <div class="container">
-            <h3 id="titulo-sessoes-materia">Sessões desta Disciplina</h3>
-            <p class="subtitulo-card">Podes eliminar sessões antigas ou de teste.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
+                <h3 id="titulo-sessoes-materia" style="margin: 0;">Sessões desta Disciplina</h3>
+                <button class="btn-secundario" style="padding: 6px 12px; font-size: 13px;" onclick="alternarFormularioManual()">+ Registar manual</button>
+            </div>
+            <p class="subtitulo-card">Podes adicionar tempo estudado fora da app ou eliminar sessões antigas.</p>
+
+            <!-- Formulário Oculto de Registo Manual -->
+            <div id="box-registo-manual" class="box-manual" style="display: none;">
+                <div class="form-linha-dupla" style="margin-bottom: 8px;">
+                    <input type="number" id="manual-horas" placeholder="Horas (ex: 1)" min="0" max="24">
+                    <input type="number" id="manual-minutos" placeholder="Minutos (ex: 30)" min="0" max="59">
+                </div>
+                <div class="form-linha-dupla" style="margin-bottom: 8px;">
+                    <input type="date" id="manual-data">
+                    <input type="text" id="manual-nota" placeholder="Nota (opcional)">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-secundario" onclick="alternarFormularioManual()" style="flex: 1; padding: 8px;">Cancelar</button>
+                    <button onclick="guardarSessaoManual()" style="flex: 1; padding: 8px;">Adicionar Tempo</button>
+                </div>
+            </div>
+
             <ul id="lista-sessoes-disciplina" class="lista-sessoes"></ul>
         </div>
 
@@ -242,7 +312,7 @@
         <div class="container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 style="margin: 0;">Conquistas</h3>
-                <span id="contador-conquistas" class="badge-semestre">0 / 16</span>
+                <span id="contador-conquistas" class="badge-semestre">0 / 17</span>
             </div>
             <p class="subtitulo-card">Desbloqueia marcos semanais e desafios de resistência a longo prazo.</p>
             <div id="grid-conquistas" class="grid-conquistas"></div>
