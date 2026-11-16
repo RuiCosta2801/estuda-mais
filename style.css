@@ -16,6 +16,11 @@
     box-sizing: border-box;
 }
 
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 body { 
     font-family: system-ui, -apple-system, sans-serif; 
     margin: 0 auto; 
@@ -23,6 +28,15 @@ body {
     padding: 20px; 
     background-color: var(--bg-fundo); 
     color: var(--texto-principal); 
+}
+
+/* Bloqueio total de scroll durante o Modo Foco */
+body.modo-foco-ativo {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100dvh;
+    touch-action: none;
 }
 
 /* Cabeçalho e Perfil */
@@ -42,7 +56,7 @@ h1 span { color: var(--primaria); }
     background-color: var(--bg-card);
     color: var(--texto-secundario);
     border: 1px solid var(--borda-subtil);
-    padding: 6px 12px;
+    padding: 6px 14px;
     font-size: 13px;
     border-radius: 20px;
 }
@@ -80,10 +94,18 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
 .login-container {
     margin-top: 10px;
 }
-.login-icone {
-    font-size: 42px;
-    text-align: center;
-    margin-bottom: 8px;
+.login-marca {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 12px auto;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primaria), var(--sucesso));
+    color: white;
+    font-size: 22px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .campo-grupo {
     display: flex;
@@ -140,7 +162,7 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
     color: var(--texto-principal);
 }
 
-/* Grid de Conquistas */
+/* Grid de Conquistas (Sem Emojis) */
 .grid-conquistas {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -155,12 +177,10 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
     flex-direction: column;
     gap: 6px;
     opacity: 0.45;
-    filter: grayscale(100%);
     transition: all 0.3s ease;
 }
 .conquista-card.desbloqueada {
     opacity: 1;
-    filter: none;
     border-color: rgba(16, 185, 129, 0.5);
     background: linear-gradient(145deg, rgba(99, 102, 241, 0.12), rgba(16, 185, 129, 0.12));
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);
@@ -169,9 +189,23 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 2px;
 }
-.conquista-emoji {
-    font-size: 24px;
+.conquista-simbolo {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background-color: rgba(99, 102, 241, 0.18);
+    color: #a5b4fc;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.conquista-card.desbloqueada .conquista-simbolo {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: var(--sucesso);
 }
 .conquista-status {
     font-size: 11px;
@@ -222,12 +256,21 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
     opacity: 1;
 }
 .toast-icone {
-    font-size: 32px;
-    animation: saltoTrofeu 0.8s ease infinite alternate;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.18);
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    animation: pulsoSimbolo 0.8s ease infinite alternate;
 }
-@keyframes saltoTrofeu {
-    from { transform: scale(1) rotate(-5deg); }
-    to { transform: scale(1.15) rotate(5deg); }
+@keyframes pulsoSimbolo {
+    from { transform: scale(1); }
+    to { transform: scale(1.12); }
 }
 .toast-conteudo strong {
     display: block;
@@ -304,11 +347,21 @@ h2, h3 { color: var(--texto-principal); margin-top: 0; }
     margin-bottom: 22px;
     width: 100%;
 }
-.form-linha-extra {
+.form-linha-dupla {
     display: grid;
-    grid-template-columns: 1fr 75px auto;
+    grid-template-columns: 1fr 1.35fr;
     gap: 8px;
     width: 100%;
+}
+.form-linha-unica {
+    display: block;
+    width: 100%;
+}
+.ajuda-meta {
+    font-size: 12px;
+    color: var(--texto-secundario);
+    line-height: 1.35;
+    margin-top: -2px;
 }
 input[type="text"], input[type="number"], input[type="date"], select { 
     padding: 11px 12px; 
@@ -316,7 +369,7 @@ input[type="text"], input[type="number"], input[type="date"], select {
     color: var(--texto-principal);
     border: 1px solid var(--borda-subtil); 
     border-radius: 8px; 
-    font-size: 15px; 
+    font-size: 14px; 
     outline: none;
     width: 100%;
     min-width: 0;
@@ -334,10 +387,10 @@ input::placeholder {
 }
 .btn-adicionar {
     white-space: nowrap;
-    padding: 11px 14px;
+    padding: 12px 14px;
 }
 
-/* Linha Temporal de Semestres (As Minhas Cadeiras) */
+/* Linha Temporal de Semestres / Período */
 .timeline-container {
     position: relative;
     padding-left: 20px;
@@ -475,29 +528,42 @@ button:disabled {
     border-radius: 12px;
     width: fit-content;
 }
+.badge-secundario {
+    display: inline-block;
+    background-color: var(--bg-input);
+    color: var(--texto-secundario);
+    border: 1px solid var(--borda-subtil);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+}
 
-/* ECRÃ MODO FOCO */
+/* ECRÃ MODO FOCO (100% FIXO E CENTRADO) */
 .ecra-foco {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
-    height: 100%;
+    height: 100dvh;
     background-color: var(--bg-fundo);
     color: var(--texto-principal);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1500;
-    padding: 20px;
+    padding: 24px;
+    overflow: hidden;
+    touch-action: none;
 }
 .foco-conteudo {
     width: 100%;
-    max-width: 480px;
+    max-width: 440px;
+    margin: 0 auto;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
 }
 .foco-badge {
     background-color: rgba(99, 102, 241, 0.15);
@@ -511,8 +577,10 @@ button:disabled {
 }
 .foco-titulo {
     margin: 0 0 8px 0;
-    font-size: 24px;
+    font-size: 22px;
     color: var(--texto-principal);
+    line-height: 1.3;
+    word-break: break-word;
 }
 .foco-estado {
     margin: 0;
@@ -523,12 +591,21 @@ button:disabled {
     color: var(--aviso);
     font-weight: 600;
 }
+.foco-aviso-saida {
+    margin: 10px 0 0 0;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background-color: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    font-size: 12px;
+}
 .foco-cronometro {
-    font-size: 62px;
+    font-size: clamp(46px, 13vw, 62px);
     font-weight: bold;
     font-family: monospace;
     color: var(--primaria);
-    margin: 35px 0;
+    margin: 30px 0;
     letter-spacing: 2px;
     text-shadow: 0 0 28px rgba(99, 102, 241, 0.45);
 }
@@ -538,7 +615,7 @@ button:disabled {
 }
 .foco-nota-box {
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 22px;
 }
 .foco-nota-box input {
     background-color: var(--bg-card);
@@ -552,7 +629,7 @@ button:disabled {
     display: flex;
     gap: 12px;
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 22px;
 }
 .btn-pausar {
     flex: 1;
@@ -666,9 +743,10 @@ button:disabled {
     background-color: rgba(239, 68, 68, 0.12);
     color: #f87171;
     border: 1px solid rgba(239, 68, 68, 0.25);
-    padding: 6px 10px;
+    padding: 6px 11px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 700;
     cursor: pointer;
 }
 .btn-apagar-sessao:hover {

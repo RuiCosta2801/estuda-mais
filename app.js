@@ -14,7 +14,7 @@ let conquistasDesbloqueadasIds = [];
 let disciplinaSelecionadaId = null;
 let disciplinaRelatorioAtualId = null;
 
-// Controlo do Cronómetro e Pausa
+// Controlo do Cronómetro, Pausa e Proteção de Foco
 let tempoIntervalo = null;
 let horaInicio = null;
 let tempoAcumuladoAntesPausa = 0;
@@ -22,8 +22,35 @@ let estaEmPausa = false;
 let segundosDecorridos = 0;
 let toastTimeout = null;
 let wakeLock = null;
+let momentoSaidaApp = null;
+let segundosForaDaApp = 0;
 
-// --- 3. Gestão de Perfil e Início de Sessão ---
+// --- 3. Proteção Durante Sessão Ativa (Sem Pausa) ---
+window.addEventListener('beforeunload', (e) => {
+    if (horaInicio !== null && !estaEmPausa) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (horaInicio !== null && !estaEmPausa) {
+        if (document.hidden) {
+            momentoSaidaApp = Date.now();
+        } else if (momentoSaidaApp !== null) {
+            const diffSeg = Math.floor((Date.now() - momentoSaidaApp) / 1000);
+            momentoSaidaApp = null;
+            if (diffSeg >= 3) {
+                segundosForaDaApp += diffSeg;
+                const avisoEl = document.getElementById('foco-aviso-saida');
+                avisoEl.innerText = `Saíste da aplicação durante ${formatarTempo(segundosForaDaApp)} sem pausar.`;
+                avisoEl.style.display = 'block';
+            }
+        }
+    }
+});
+
+// --- 4. Gestão de Perfil e Início de Sessão ---
 const opcoesAnosEnsino = {
     normal: [
         "1.º Ano (Ensino Primário)",
@@ -148,6 +175,7 @@ function abrirPaginaPerfil() {
 function obterTermosEnsino() {
     const isSuperior = perfilUtilizador && perfilUtilizador.nivel === 'superior';
     return {
+        isSuperior: isSuperior,
         singular: isSuperior ? 'cadeira' : 'disciplina',
         singularCap: isSuperior ? 'Cadeira' : 'Disciplina',
         plural: isSuperior ? 'cadeiras' : 'disciplinas',
@@ -171,12 +199,41 @@ function aplicarNomenclaturaEnsino() {
     document.getElementById('titulo-minhas-materias').innerText = `As Minhas ${termos.pluralCap}`;
     document.getElementById('nova-disciplina').placeholder = `Nome da ${termos.singular} (${termos.exemplo})`;
     
+    // Ajustar seletor de semestre (Superior = 1º/2º Semestre | Normal = Apenas Anual)
+    const grupoPeriodoHoras = document.getElementById('grupo-periodo-horas');
+    const selectSemestre = document.getElementById('semestre-disciplina');
+    const ajudaMeta = document.getElementById('texto-ajuda-meta');
+
+    if (termos.isSuperior) {
+        grupoPeriodoHoras.className = 'form-linha-dupla';
+        selectSemestre.style.display = 'block';
+        selectSemestre.innerHTML = `
+            <option value="1.º Semestre">1.º Semestre</option>
+            <option value="2.º Semestre">2.º Semestre</option>
+        `;
+        ajudaMeta.innerText = "Horas semanais esperadas (calculado automaticamente para um semestre de 15 semanas).";
+    } else {
+        grupoPeriodoHoras.className = 'form-linha-unica';
+        selectSemestre.style.display = 'none';
+        selectSemestre.innerHTML = `<option value="Anual">Anual</option>`;
+        ajudaMeta.innerText = "Horas semanais esperadas (calculado automaticamente para um ano letivo de 30 semanas).";
+    }
+
     document.getElementById('titulo-comparacao-materias').innerText = `Comparação entre ${termos.pluralCap}`;
     document.getElementById('titulo-sessoes-materia').innerText = `Sessões desta ${termos.singularCap}`;
-    document.getElementById('btn-apagar-relatorio').innerText = `🗑️ Apagar esta ${termos.singular}`;
+    document.getElementById('btn-apagar-relatorio').innerText = `✕ Apagar esta ${termos.singular}`;
 }
 
-// --- 4. Sistema de Conquistas ---
+// --- 5. Sistema de Conquistas (Semanais & Longo Prazo) ---
+function obterInicioSemana(dataObj) {
+    const d = new Date(dataObj);
+    const diaSemana = d.getDay(); // 0 = Domingo, 1 = Segunda...
+    const diffSegunda = (diaSemana === 0 ? -6 : 1) - diaSemana;
+    d.setDate(d.getDate() + diffSegunda);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+}
+
 function calcularDiasSeguidos() {
     if (sessoes.length === 0) return 0;
     const diasUnicos = [...new Set(sessoes.map(s => new Date(s.data).toISOString().slice(0, 10)))].sort().reverse();
@@ -200,112 +257,230 @@ function calcularDiasSeguidos() {
     return streak;
 }
 
+function avaliarMetricasSemanais() {
+    const inicioSemanaAtual = obterInicioSemana(new Date());
+    const msSemana = 7 * 24 * 3600 * 1000;
+
+    let algumaMetaSemanalCumprida = false;
+    let disciplinaMetaSemanal = null;
+    let superacaoSemanal = false;
+    let disciplinaSuperacao = null;
+    let quatroSemanasSeguidas = false;
+    let disciplinaQuatroSemanas = null;
+
+    // Verificar cada disciplina
+    disciplinas.forEach(d => {
+        const metaSemanalSeg = (d.horasSemanais || 2) * 3600;
+        const sessoesDisc = sessoes.filter(s => s.disciplinaId === d.id);
+
+        // Tempo nesta semana (de segunda-feira até agora)
+        const tempoSemanaAtual = sessoesDisc
+            .filter(s => obterInicioSemana(s.data) === inicioSemanaAtual)
+            .reduce((soma, s) => soma + s.duracaoSegundos, 0);
+
+        if (tempoSemanaAtual >= metaSemanalSeg) {
+            algumaMetaSemanalCumprida = true;
+            if (!disciplinaMetaSemanal) disciplinaMetaSemanal = d;
+        }
+
+        if (tempoSemanaAtual >= metaSemanalSeg * 1.5) {
+            superacaoSemanal = true;
+            if (!disciplinaSuperacao) disciplinaSuperacao = d;
+        }
+
+        // Verificar 4 semanas consecutivas (atual e as 3 anteriores)
+        let cumpriu4Semanas = true;
+        for (let w = 0; w < 4; w++) {
+            const alvoSemana = inicioSemanaAtual - (w * msSemana);
+            const tempoNaquelaSemana = sessoesDisc
+                .filter(s => obterInicioSemana(s.data) === alvoSemana)
+                .reduce((soma, s) => soma + s.duracaoSegundos, 0);
+            if (tempoNaquelaSemana < metaSemanalSeg) {
+                cumpriu4Semanas = false;
+                break;
+            }
+        }
+        if (cumpriu4Semanas) {
+            quatroSemanasSeguidas = true;
+            if (!disciplinaQuatroSemanas) disciplinaQuatroSemanas = d;
+        }
+    });
+
+    // Verificar se TODAS as disciplinas cumpriram a meta semanal esta semana
+    const todasCumpridasEstaSemana = disciplinas.length > 0 && disciplinas.every(d => {
+        const metaSemanalSeg = (d.horasSemanais || 2) * 3600;
+        const tempoSemanaAtual = sessoes
+            .filter(s => s.disciplinaId === d.id && obterInicioSemana(s.data) === inicioSemanaAtual)
+            .reduce((soma, s) => soma + s.duracaoSegundos, 0);
+        return tempoSemanaAtual >= metaSemanalSeg;
+    });
+
+    return {
+        algumaMetaSemanalCumprida,
+        disciplinaMetaSemanal,
+        todasCumpridasEstaSemana,
+        superacaoSemanal,
+        disciplinaSuperacao,
+        quatroSemanasSeguidas,
+        disciplinaQuatroSemanas
+    };
+}
+
 function avaliarTodasConquistas() {
     const termos = obterTermosEnsino();
     const tempoTotalGlobal = disciplinas.reduce((soma, d) => soma + (d.tempoTotal || 0), 0);
     const maxSessao = sessoes.reduce((max, s) => Math.max(max, s.duracaoSegundos || 0), 0);
     const diasSeguidos = calcularDiasSeguidos();
+    const sem = avaliarMetricasSemanais();
 
     const disc10h = disciplinas.find(d => (d.tempoTotal || 0) >= 10 * 3600);
-    const disc25h = disciplinas.find(d => (d.tempoTotal || 0) >= 25 * 3600);
-    const discMetaCumprida = disciplinas.find(d => (d.tempoTotal || 0) >= (d.metaSegundos || 30 * 3600));
+    const disc50h = disciplinas.find(d => (d.tempoTotal || 0) >= 50 * 3600);
+    const disc100h = disciplinas.find(d => (d.tempoTotal || 0) >= 100 * 3600);
+    const discMetaPeriodoCumprida = disciplinas.find(d => (d.tempoTotal || 0) >= (d.metaSegundos || 30 * 3600));
 
     return [
+        // --- INÍCIO & SEMANAIS ---
         {
             id: 'primeira_sessao',
-            emoji: '🚀',
+            simbolo: '01',
             titulo: 'Primeiro Passo',
             desc: 'Conclui a tua primeira sessão de estudo.',
             desbloqueada: sessoes.length >= 1,
             extra: ''
         },
         {
-            id: 'organizado_3',
-            emoji: '📚',
-            titulo: 'Plano Traçado',
-            desc: `Adiciona pelo menos 3 ${termos.plural} ao teu plano.`,
-            desbloqueada: disciplinas.length >= 3,
+            id: 'meta_semanal_1',
+            simbolo: '1S',
+            titulo: 'Meta Semanal',
+            desc: `Cumpre as horas semanais de uma ${termos.singular} esta semana.`,
+            desbloqueada: sem.algumaMetaSemanalCumprida,
+            extra: sem.disciplinaMetaSemanal ? `Obtido em: ${sem.disciplinaMetaSemanal.nome}` : ''
+        },
+        {
+            id: 'semana_perfeita',
+            simbolo: '100%',
+            titulo: 'Semana Perfeita',
+            desc: `Cumpre a meta semanal de todas as tuas ${termos.plural} na mesma semana.`,
+            desbloqueada: sem.todasCumpridasEstaSemana,
             extra: ''
         },
         {
-            id: 'foco_1h',
-            emoji: '⏱️',
-            titulo: 'Foco Profundo',
-            desc: 'Completa uma sessão contínua de 1 hora.',
-            desbloqueada: maxSessao >= 3600,
-            extra: ''
+            id: 'superacao_semanal',
+            simbolo: '+50%',
+            titulo: 'Superação Semanal',
+            desc: `Ultrapassa em 50% a meta semanal de uma ${termos.singular}.`,
+            desbloqueada: sem.superacaoSemanal,
+            extra: sem.disciplinaSuperacao ? `Obtido em: ${sem.disciplinaSuperacao.nome}` : ''
         },
         {
-            id: 'foco_2h',
-            emoji: '🧠',
-            titulo: 'Mente Inabalável',
-            desc: 'Completa uma maratona de 2 horas numa única sessão.',
-            desbloqueada: maxSessao >= 7200,
-            extra: ''
+            id: 'quatro_semanas',
+            simbolo: '4S',
+            titulo: 'Ritmo Imparável',
+            desc: `Cumpre a meta semanal de uma ${termos.singular} durante 4 semanas seguidas.`,
+            desbloqueada: sem.quatroSemanasSeguidas,
+            extra: sem.disciplinaQuatroSemanas ? `Obtido em: ${sem.disciplinaQuatroSemanas.nome}` : ''
         },
-        {
-            id: 'materia_10h',
-            emoji: '📘',
-            titulo: `10h numa ${termos.singularCap}`,
-            desc: `Acumula 10 horas de estudo numa só ${termos.singular}.`,
-            desbloqueada: !!disc10h,
-            extra: disc10h ? `Conquistado em: ${disc10h.nome}` : ''
-        },
-        {
-            id: 'materia_25h',
-            emoji: '🎓',
-            titulo: `25h numa ${termos.singularCap}`,
-            desc: `Acumula 25 horas de domínio numa só ${termos.singular}.`,
-            desbloqueada: !!disc25h,
-            extra: disc25h ? `Conquistado em: ${disc25h.nome}` : ''
-        },
-        {
-            id: 'total_10h',
-            emoji: '⚡',
-            titulo: '10 Horas Totais',
-            desc: 'Alcança 10 horas de estudo somando todas as matérias.',
-            desbloqueada: tempoTotalGlobal >= 10 * 3600,
-            extra: ''
-        },
-        {
-            id: 'total_50h',
-            emoji: '🔥',
-            titulo: '50 Horas Totais',
-            desc: 'Alcança 50 horas acumuladas de dedicação.',
-            desbloqueada: tempoTotalGlobal >= 50 * 3600,
-            extra: ''
-        },
-        {
-            id: 'total_100h',
-            emoji: '👑',
-            titulo: 'Centurião do Estudo',
-            desc: 'Atinge a marca lendária de 100 horas totais.',
-            desbloqueada: tempoTotalGlobal >= 100 * 3600,
-            extra: ''
-        },
-        {
-            id: 'streak_3',
-            emoji: '📅',
-            titulo: 'Ritmo Certo',
-            desc: 'Estuda durante 3 dias seguidos.',
-            desbloqueada: diasSeguidos >= 3,
-            extra: ''
-        },
+
+        // --- CONSISTÊNCIA & RESISTÊNCIA ---
         {
             id: 'streak_7',
-            emoji: '🏅',
-            titulo: 'Semana Imparável',
-            desc: 'Mantém o foco durante 7 dias consecutivos.',
+            simbolo: '7D',
+            titulo: 'Semana Dedicada',
+            desc: 'Estuda todos os dias durante 7 dias consecutivos.',
             desbloqueada: diasSeguidos >= 7,
             extra: ''
         },
         {
-            id: 'meta_concluida',
-            emoji: '🎯',
-            titulo: 'Objetivo Cumprido',
-            desc: `Atinge 100% da meta definida numa ${termos.singular}.`,
-            desbloqueada: !!discMetaCumprida,
-            extra: discMetaCumprida ? `Meta atingida: ${discMetaCumprida.nome}` : ''
+            id: 'streak_30',
+            simbolo: '30D',
+            titulo: 'Hábito de Ferro',
+            desc: 'Estuda todos os dias durante 30 dias consecutivos.',
+            desbloqueada: diasSeguidos >= 30,
+            extra: ''
+        },
+        {
+            id: 'foco_2h',
+            simbolo: '2H',
+            titulo: 'Mente Inabalável',
+            desc: 'Completa uma sessão contínua de 2 horas sem interrupções.',
+            desbloqueada: maxSessao >= 7200,
+            extra: ''
+        },
+        {
+            id: 'foco_4h',
+            simbolo: '4H',
+            titulo: 'Ultra-Maratona',
+            desc: 'Completa uma sessão contínua de 4 horas num único bloco.',
+            desbloqueada: maxSessao >= 14400,
+            extra: ''
+        },
+
+        // --- DOMÍNIO POR CADEIRA / DISCIPLINA ---
+        {
+            id: 'materia_10h',
+            simbolo: '10H',
+            titulo: `Base Sólida`,
+            desc: `Acumula 10 horas de estudo numa só ${termos.singular}.`,
+            desbloqueada: !!disc10h,
+            extra: disc10h ? `Obtido em: ${disc10h.nome}` : ''
+        },
+        {
+            id: 'materia_50h',
+            simbolo: '50H',
+            titulo: `Especialista`,
+            desc: `Acumula 50 horas de dedicação numa só ${termos.singular}.`,
+            desbloqueada: !!disc50h,
+            extra: disc50h ? `Obtido em: ${disc50h.nome}` : ''
+        },
+        {
+            id: 'materia_100h',
+            simbolo: '100H',
+            titulo: `Mestre da ${termos.singularCap}`,
+            desc: `Acumula 100 horas numa única ${termos.singular}.`,
+            desbloqueada: !!disc100h,
+            extra: disc100h ? `Obtido em: ${disc100h.nome}` : ''
+        },
+        {
+            id: 'meta_periodo',
+            simbolo: '✓',
+            titulo: 'Período Concluído',
+            desc: `Atinge 100% da meta total do semestre/ano numa ${termos.singular}.`,
+            desbloqueada: !!discMetaPeriodoCumprida,
+            extra: discMetaPeriodoCumprida ? `Concluído: ${discMetaPeriodoCumprida.nome}` : ''
+        },
+
+        // --- MARCOS TOTAIS EXTREMOS ---
+        {
+            id: 'total_100h',
+            simbolo: 'I',
+            titulo: 'Centurião',
+            desc: 'Atinge 100 horas totais acumuladas de estudo.',
+            desbloqueada: tempoTotalGlobal >= 100 * 3600,
+            extra: ''
+        },
+        {
+            id: 'total_250h',
+            simbolo: 'II',
+            titulo: 'Veterano',
+            desc: 'Atinge 250 horas totais acumuladas de estudo.',
+            desbloqueada: tempoTotalGlobal >= 250 * 3600,
+            extra: ''
+        },
+        {
+            id: 'total_500h',
+            simbolo: 'III',
+            titulo: 'Mestre do Foco',
+            desc: 'Atinge a marca histórica de 500 horas totais de estudo.',
+            desbloqueada: tempoTotalGlobal >= 500 * 3600,
+            extra: ''
+        },
+        {
+            id: 'total_1000h',
+            simbolo: 'IV',
+            titulo: 'Lenda Académica',
+            desc: 'Alcança 1000 horas totais de estudo registadas.',
+            desbloqueada: tempoTotalGlobal >= 1000 * 3600,
+            extra: ''
         }
     ];
 }
@@ -339,7 +514,7 @@ function renderizarConquistas() {
         grid.innerHTML += `
             <div class="conquista-card ${c.desbloqueada ? 'desbloqueada' : ''}">
                 <div class="conquista-topo">
-                    <span class="conquista-emoji">${c.emoji}</span>
+                    <span class="conquista-simbolo">${c.simbolo}</span>
                     ${c.desbloqueada ? '<span class="conquista-status">✓ Obtida</span>' : ''}
                 </div>
                 <span class="conquista-titulo">${c.titulo}</span>
@@ -350,7 +525,7 @@ function renderizarConquistas() {
     });
 }
 
-// --- 5. Carregar e Guardar Dados ---
+// --- 6. Carregar e Guardar Dados ---
 function carregarDados() {
     const perfilGuardado = localStorage.getItem('estuda_perfil');
     if (perfilGuardado) {
@@ -397,16 +572,20 @@ function sincronizarTemposDisciplinas() {
     guardarDados();
 }
 
-// --- 6. Funções das Disciplinas / Cadeiras ---
+// --- 7. Funções das Disciplinas / Cadeiras ---
 function adicionarDisciplina() {
     const termos = obterTermosEnsino();
     const inputNome = document.getElementById('nova-disciplina');
     const selectSemestre = document.getElementById('semestre-disciplina');
-    const inputMeta = document.getElementById('meta-disciplina');
+    const inputMetaSemanal = document.getElementById('meta-disciplina');
     
     const nome = inputNome.value.trim();
-    const semestre = selectSemestre.value;
-    const metaHoras = parseFloat(inputMeta.value) || 30;
+    const periodo = termos.isSuperior ? selectSemestre.value : 'Anual';
+    const horasSemanais = parseFloat(inputMetaSemanal.value) || 2;
+    
+    // Semestre = 15 semanas letivas | Anual = 30 semanas letivas
+    const semanasPeriodo = (periodo === 'Anual') ? 30 : 15;
+    const metaTotalHoras = horasSemanais * semanasPeriodo;
     
     if (nome === '') {
         alert(`Escreve o nome da ${termos.singular}!`);
@@ -416,8 +595,9 @@ function adicionarDisciplina() {
     const nova = {
         id: Date.now(),
         nome: nome,
-        semestre: semestre,
-        metaSegundos: metaHoras * 3600,
+        semestre: periodo,
+        horasSemanais: horasSemanais,
+        metaSegundos: metaTotalHoras * 3600,
         tempoTotal: 0
     };
 
@@ -426,6 +606,7 @@ function adicionarDisciplina() {
     verificarNovasConquistas();
     atualizarInterface();
     inputNome.value = '';
+    inputMetaSemanal.value = '';
 }
 
 function selecionarDisciplinaParaEstudar(id) {
@@ -451,6 +632,7 @@ function removerDisciplina(id) {
 }
 
 function atualizarInterface() {
+    const termos = obterTermosEnsino();
     const timeline = document.getElementById('timeline-disciplinas');
     const containerBotoes = document.getElementById('botoes-selecao-disciplinas');
     const msgTopo = document.getElementById('msg-sem-disciplinas-topo');
@@ -480,38 +662,42 @@ function atualizarInterface() {
         btnEscolha.className = `btn-escolha-disciplina ${isSelecionada ? 'selecionada' : ''}`;
         btnEscolha.innerHTML = `
             <span class="card-escolha-nome">${d.nome}</span>
-            <span class="card-escolha-tempo">⏱️ ${formatarTempo(d.tempoTotal || 0)}</span>
+            <span class="card-escolha-tempo">${formatarTempo(d.tempoTotal || 0)}</span>
         `;
         btnEscolha.onclick = () => selecionarDisciplinaParaEstudar(d.id);
         containerBotoes.appendChild(btnEscolha);
     });
 
-    // 2. Linha Temporal agrupada por Semestre
-    const ordemSemestres = ["1.º Semestre", "2.º Semestre", "Anual"];
-    ordemSemestres.forEach(semestreNome => {
-        const materiasDoSemestre = disciplinas.filter(d => (d.semestre || "1.º Semestre") === semestreNome);
+    // 2. Linha Temporal agrupada por Período Letivo
+    const ordemPeriodos = termos.isSuperior 
+        ? ["1.º Semestre", "2.º Semestre", "Anual"] 
+        : ["Anual", "1.º Semestre", "2.º Semestre"];
+
+    ordemPeriodos.forEach(periodoNome => {
+        const materiasDoPeriodo = disciplinas.filter(d => (d.semestre || (termos.isSuperior ? "1.º Semestre" : "Anual")) === periodoNome);
         
-        if (materiasDoSemestre.length > 0) {
+        if (materiasDoPeriodo.length > 0) {
             const bloco = document.createElement('div');
             bloco.className = 'timeline-bloco';
 
             let itensHtml = '';
-            materiasDoSemestre.forEach(d => {
+            materiasDoPeriodo.forEach(d => {
                 const metaH = Math.round((d.metaSegundos || 30 * 3600) / 3600);
+                const infoSemanal = d.horasSemanais ? ` • ${d.horasSemanais}h/sem` : '';
                 itensHtml += `
                     <li class="disciplina-item" onclick="abrirRelatorio(${d.id})">
                         <div class="disciplina-info">
                             <strong>${d.nome}</strong>
-                            <span class="disciplina-subtexto">${formatarTempo(d.tempoTotal || 0)} de ${metaH}h</span>
+                            <span class="disciplina-subtexto">${formatarTempo(d.tempoTotal || 0)} de ${metaH}h${infoSemanal}</span>
                         </div>
-                        <button class="btn-seta" title="Ver relatório">➔</button>
+                        <button class="btn-seta" title="Ver relatório">→</button>
                     </li>
                 `;
             });
 
             bloco.innerHTML = `
                 <div class="timeline-ponto"></div>
-                <div class="timeline-cabecalho">${semestreNome}</div>
+                <div class="timeline-cabecalho">${periodoNome}</div>
                 <ul class="timeline-lista">${itensHtml}</ul>
             `;
             timeline.appendChild(bloco);
@@ -519,7 +705,7 @@ function atualizarInterface() {
     });
 }
 
-// --- 7. Formatação e Navegação ---
+// --- 8. Formatação e Navegação ---
 function formatarTempo(segundos) {
     const h = Math.floor(segundos / 3600);
     const m = Math.floor((segundos % 3600) / 60);
@@ -541,6 +727,7 @@ function formatarDataHora(isoString) {
 }
 
 function esconderTodosEcras() {
+    document.body.classList.remove('modo-foco-ativo');
     document.getElementById('ecra-login').style.display = 'none';
     document.getElementById('ecra-principal').style.display = 'none';
     document.getElementById('ecra-relatorio').style.display = 'none';
@@ -561,7 +748,7 @@ function voltarPrincipal() {
     atualizarInterface();
 }
 
-// --- 8. Página de Relatório & Histórico ---
+// --- 9. Página de Relatório & Histórico ---
 function abrirRelatorio(id) {
     const disciplina = disciplinas.find(d => d.id === id);
     if (!disciplina) return;
@@ -575,7 +762,15 @@ function abrirRelatorio(id) {
     const faltaSeg = Math.max(0, metaSeg - estudadoSeg);
     const percentagem = Math.min(100, Math.round((estudadoSeg / metaSeg) * 100));
 
-    document.getElementById('rel-semestre').innerText = disciplina.semestre || '1.º Semestre';
+    document.getElementById('rel-semestre').innerText = disciplina.semestre || 'Anual';
+    const semanalBadge = document.getElementById('rel-semanal-badge');
+    if (disciplina.horasSemanais) {
+        semanalBadge.innerText = `${disciplina.horasSemanais}h / semana`;
+        semanalBadge.style.display = 'inline-block';
+    } else {
+        semanalBadge.style.display = 'none';
+    }
+
     document.getElementById('rel-titulo').innerText = disciplina.nome;
     document.getElementById('rel-estudado').innerText = formatarTempo(estudadoSeg);
     document.getElementById('rel-falta').innerText = formatarTempo(faltaSeg);
@@ -640,8 +835,8 @@ function renderizarListaSessoes(elementoId, filtroDisciplinaId) {
         const disc = disciplinas.find(d => d.id === s.disciplinaId);
         const nomeDisc = disc ? disc.nome : `${termos.singularCap} apagada`;
         const tituloLinha = filtroDisciplinaId !== null 
-            ? `⏱️ ${formatarTempo(s.duracaoSegundos)}` 
-            : `${nomeDisc} — ⏱️ ${formatarTempo(s.duracaoSegundos)}`;
+            ? `${formatarTempo(s.duracaoSegundos)}` 
+            : `${nomeDisc} • ${formatarTempo(s.duracaoSegundos)}`;
 
         const notaHtml = s.nota ? `<span class="sessao-nota">"${s.nota}"</span>` : '';
 
@@ -653,7 +848,7 @@ function renderizarListaSessoes(elementoId, filtroDisciplinaId) {
                 <span class="sessao-meta">${formatarDataHora(s.data)}</span>
                 ${notaHtml}
             </div>
-            <button class="btn-apagar-sessao" onclick="eliminarSessao(${s.id})" title="Eliminar sessão">🗑️</button>
+            <button class="btn-apagar-sessao" onclick="eliminarSessao(${s.id})" title="Eliminar sessão">✕</button>
         `;
         ul.appendChild(li);
     });
@@ -673,14 +868,14 @@ function eliminarSessao(sessaoId) {
     }
 }
 
-// --- 9. Notificação Animada de Conquista ---
+// --- 10. Notificação Animada de Conquista ---
 function mostrarToastConquista(nomeDisciplina, segundos, novaConquista) {
     const toast = document.getElementById('toast-conquista');
     const titulo = document.getElementById('toast-titulo');
     const mensagem = document.getElementById('toast-mensagem');
 
     if (novaConquista) {
-        titulo.innerText = `Conquista: ${novaConquista.titulo}!`;
+        titulo.innerText = `Conquista: ${novaConquista.titulo}`;
         mensagem.innerText = `+${formatarTempo(segundos)} em ${nomeDisciplina} • ${novaConquista.desc}`;
     } else {
         const frases = [
@@ -690,7 +885,7 @@ function mostrarToastConquista(nomeDisciplina, segundos, novaConquista) {
             "Missão cumprida! Mais perto da tua meta."
         ];
         titulo.innerText = frases[Math.floor(Math.random() * frases.length)];
-        mensagem.innerText = `+${formatarTempo(segundos)} registados em ${nomeDisciplina}!`;
+        mensagem.innerText = `+${formatarTempo(segundos)} registados em ${nomeDisciplina}.`;
     }
 
     toast.classList.add('visivel');
@@ -705,7 +900,7 @@ function fecharToastConquista() {
     document.getElementById('toast-conquista').classList.remove('visivel');
 }
 
-// --- 10. Modo Foco & Cronómetro com Pausa ---
+// --- 11. Modo Foco & Cronómetro com Pausa ---
 async function ativarWakeLock() {
     try {
         if ('wakeLock' in navigator) {
@@ -727,17 +922,24 @@ function iniciarCronometro() {
     if (!disciplina) return;
 
     esconderTodosEcras();
+    document.body.classList.add('modo-foco-ativo');
     document.getElementById('app-header').style.display = 'none';
     document.getElementById('ecra-foco').style.display = 'flex';
 
-    document.getElementById('foco-semestre').innerText = disciplina.semestre || '1.º Semestre';
+    document.getElementById('foco-semestre').innerText = disciplina.semestre || 'Anual';
     document.getElementById('foco-titulo').innerText = disciplina.nome;
     document.getElementById('foco-nota').value = '';
+    
+    const avisoEl = document.getElementById('foco-aviso-saida');
+    avisoEl.style.display = 'none';
+    avisoEl.innerText = '';
     
     horaInicio = Date.now();
     tempoAcumuladoAntesPausa = 0;
     estaEmPausa = false;
     segundosDecorridos = 0;
+    momentoSaidaApp = null;
+    segundosForaDaApp = 0;
 
     atualizarEstadoVisualPausa();
     atualizarEcraCronometro();

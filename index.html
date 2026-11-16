@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Estuda+</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
@@ -19,9 +19,9 @@
 
     <!-- NOTIFICAÇÃO ANIMADA DE CONQUISTA -->
     <div id="toast-conquista" class="toast-conquista" onclick="fecharToastConquista()">
-        <div class="toast-icone">🏆</div>
+        <div class="toast-icone">★</div>
         <div class="toast-conteudo">
-            <strong id="toast-titulo">Sessão Concluída!</strong>
+            <strong id="toast-titulo">Sessão Concluída</strong>
             <p id="toast-mensagem">Estudaste 0m e 0s.</p>
         </div>
     </div>
@@ -30,19 +30,19 @@
     <header id="app-header">
         <div class="header-topo">
             <h1>Estuda<span>+</span></h1>
-            <button id="btn-abrir-perfil" class="btn-perfil" onclick="abrirPaginaPerfil()" style="display: none;">👤 Perfil</button>
+            <button id="btn-abrir-perfil" class="btn-perfil" onclick="abrirPaginaPerfil()" style="display: none;">Perfil</button>
         </div>
         <p id="header-saudacao" class="header-saudacao" style="display: none;"></p>
     </header>
 
     <!-- ECRÃ 0: CONFIGURAÇÃO / EDIÇÃO DE DADOS DO PERFIL -->
     <div id="ecra-login" style="display: none;">
-        <button id="btn-cancelar-edicao-perfil" class="btn-voltar" onclick="abrirPaginaPerfil()" style="display: none;">⬅ Cancelar</button>
+        <button id="btn-cancelar-edicao-perfil" class="btn-voltar" onclick="abrirPaginaPerfil()" style="display: none;">← Cancelar</button>
         
         <div class="container login-container">
-            <div class="login-icone">🎓</div>
+            <div class="login-marca">E+</div>
             <h2 id="titulo-form-perfil" style="text-align: center; margin-bottom: 6px;">Bem-vindo ao Estuda+</h2>
-            <p class="subtitulo-card" style="text-align: center; margin-top: 0;">Preenche os teus dados apenas uma vez para personalizar a app.</p>
+            <p class="subtitulo-card" style="text-align: center; margin-top: 0;">Preenche os teus dados apenas uma vez para personalizar a aplicação.</p>
 
             <div class="campo-grupo">
                 <label for="perfil-nome">Nome</label>
@@ -67,7 +67,7 @@
                 <select id="perfil-ano"></select>
             </div>
 
-            <button onclick="guardarPerfil()" style="width: 100%; padding: 14px; margin-top: 10px; font-size: 16px;">Guardar e Continuar ➔</button>
+            <button onclick="guardarPerfil()" style="width: 100%; padding: 14px; margin-top: 10px; font-size: 16px;">Guardar e Continuar →</button>
         </div>
     </div>
 
@@ -92,15 +92,18 @@
             
             <div class="form-nova-disciplina">
                 <input type="text" id="nova-disciplina" placeholder="Nome da disciplina (Ex: Matemática)">
-                <div class="form-linha-extra">
+                
+                <div id="grupo-periodo-horas" class="form-linha-dupla">
                     <select id="semestre-disciplina">
                         <option value="1.º Semestre">1.º Semestre</option>
                         <option value="2.º Semestre">2.º Semestre</option>
-                        <option value="Anual">Anual</option>
                     </select>
-                    <input type="number" id="meta-disciplina" placeholder="Meta (h)" min="1" value="30" title="Meta em horas">
-                    <button class="btn-adicionar" onclick="adicionarDisciplina()">Adicionar</button>
+                    <input type="number" id="meta-disciplina" placeholder="Horas por semana (ex: 3)" min="1" max="60">
                 </div>
+                
+                <span id="texto-ajuda-meta" class="ajuda-meta">Define quantas horas por semana pretendes estudar (calculado automaticamente para o período letivo).</span>
+                
+                <button class="btn-adicionar" onclick="adicionarDisciplina()" style="width: 100%;">+ Adicionar</button>
             </div>
 
             <p id="msg-sem-disciplinas-lista" class="texto-vazio">Ainda não tens disciplinas para estudar</p>
@@ -111,18 +114,19 @@
         <div class="container" style="text-align: center;">
             <h3>Registos</h3>
             <div class="backup-group">
-                <button class="btn-secundario" onclick="abrirHistoricoGeral()" style="width: 100%;">📜 Histórico de Sessões</button>
+                <button class="btn-secundario" onclick="abrirHistoricoGeral()" style="width: 100%;">≡ Histórico de Sessões</button>
             </div>
         </div>
 
     </div>
 
-    <!-- ECRÃ 2: MODO FOCO (CRONÓMETRO EM ECRÃ CHEIO) -->
+    <!-- ECRÃ 2: MODO FOCO (CRONÓMETRO EM ECRÃ FIXO) -->
     <div id="ecra-foco" class="ecra-foco" style="display: none;">
         <div class="foco-conteudo">
             <span id="foco-semestre" class="foco-badge">1.º Semestre</span>
             <h2 id="foco-titulo" class="foco-titulo">Nome da Cadeira</h2>
             <p id="foco-estado" class="foco-estado">A contar tempo de estudo...</p>
+            <p id="foco-aviso-saida" class="foco-aviso-saida" style="display: none;"></p>
 
             <div class="foco-cronometro" id="display-tempo">00:00:00</div>
 
@@ -132,39 +136,42 @@
 
             <div class="foco-controlos">
                 <button id="btn-pausar" class="btn-pausar" onclick="alternarPausa()">⏸ Pausar</button>
-                <button id="btn-parar" class="btn-concluir" onclick="pararCronometro()">✅ Concluir e Guardar</button>
+                <button id="btn-parar" class="btn-concluir" onclick="pararCronometro()">✓ Concluir</button>
             </div>
 
-            <button class="btn-descartar" onclick="descartarSessao()">✖ Descartar sessão (não guardar)</button>
+            <button class="btn-descartar" onclick="descartarSessao()">✕ Descartar sessão (não guardar)</button>
         </div>
     </div>
 
     <!-- ECRÃ 3: RELATÓRIO DA DISCIPLINA / CADEIRA -->
     <div id="ecra-relatorio" style="display: none;">
-        <button class="btn-voltar" onclick="voltarPrincipal()">⬅ Voltar</button>
+        <button class="btn-voltar" onclick="voltarPrincipal()">← Voltar</button>
         
         <div class="container">
-            <span id="rel-semestre" class="badge-semestre">1.º Semestre</span>
-            <h2 id="rel-titulo" style="margin-top: 10px; margin-bottom: 18px;">Nome da Cadeira</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span id="rel-semestre" class="badge-semestre">1.º Semestre</span>
+                <span id="rel-semanal-badge" class="badge-secundario">3h / semana</span>
+            </div>
+            <h2 id="rel-titulo" style="margin-top: 12px; margin-bottom: 18px;">Nome da Cadeira</h2>
             
             <div class="cards-metricas">
                 <div class="metrica-box">
-                    <span class="metrica-label">Tempo Estudado</span>
+                    <span class="metrica-label">Estudado</span>
                     <strong id="rel-estudado" class="metrica-valor destaque-verde">0s</strong>
                 </div>
                 <div class="metrica-box">
                     <span class="metrica-label">Ainda Falta</span>
-                    <strong id="rel-falta" class="metrica-valor">30h 0m</strong>
+                    <strong id="rel-falta" class="metrica-valor">45h 0m</strong>
                 </div>
                 <div class="metrica-box">
                     <span class="metrica-label">Meta Total</span>
-                    <strong id="rel-meta" class="metrica-valor">30h</strong>
+                    <strong id="rel-meta" class="metrica-valor">45h</strong>
                 </div>
             </div>
 
             <div class="progresso-container">
                 <div class="progresso-texto">
-                    <span>Progresso da Meta</span>
+                    <span>Progresso do Período</span>
                     <strong id="rel-percentagem">0%</strong>
                 </div>
                 <div class="barra-fundo">
@@ -186,13 +193,13 @@
         </div>
 
         <div style="text-align: center; margin-top: 20px;">
-            <button id="btn-apagar-relatorio" class="btn-perigo" style="font-size: 14px;">🗑️ Apagar esta disciplina</button>
+            <button id="btn-apagar-relatorio" class="btn-perigo" style="font-size: 14px;">✕ Apagar esta disciplina</button>
         </div>
     </div>
 
     <!-- ECRÃ 4: HISTÓRICO GERAL DE SESSÕES -->
     <div id="ecra-historico" style="display: none;">
-        <button class="btn-voltar" onclick="voltarPrincipal()">⬅ Voltar</button>
+        <button class="btn-voltar" onclick="voltarPrincipal()">← Voltar</button>
         
         <div class="container">
             <h2>Histórico de Sessões</h2>
@@ -203,13 +210,13 @@
 
     <!-- ECRÃ 5: PERFIL E CONQUISTAS -->
     <div id="ecra-perfil" style="display: none;">
-        <button class="btn-voltar" onclick="voltarPrincipal()">⬅ Voltar</button>
+        <button class="btn-voltar" onclick="voltarPrincipal()">← Voltar</button>
         
         <div class="container">
             <div class="perfil-cabecalho">
                 <div class="perfil-avatar" id="perfil-avatar-inicial">R</div>
                 <div>
-                    <h2 id="view-perfil-nome" style="margin: 0 0 4px 0;">Nome</h2>
+                    <h2 id="view-perfil-nome" style="margin: 0 0 6px 0;">Nome</h2>
                     <span id="view-perfil-nivel-badge" class="badge-semestre">Ensino Superior</span>
                 </div>
             </div>
@@ -229,15 +236,15 @@
                 </div>
             </div>
 
-            <button class="btn-secundario" onclick="abrirEdicaoPerfil()" style="width: 100%; margin-top: 16px;">✏️ Alterar dados do perfil</button>
+            <button class="btn-secundario" onclick="abrirEdicaoPerfil()" style="width: 100%; margin-top: 16px;">Alterar dados do perfil</button>
         </div>
 
         <div class="container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 style="margin: 0;">🏆 As Minhas Conquistas</h3>
-                <span id="contador-conquistas" class="badge-semestre">0 / 12</span>
+                <h3 style="margin: 0;">Conquistas</h3>
+                <span id="contador-conquistas" class="badge-semestre">0 / 16</span>
             </div>
-            <p class="subtitulo-card">Desbloqueia troféus à medida que acumulas horas de foco.</p>
+            <p class="subtitulo-card">Desbloqueia marcos semanais e desafios de resistência a longo prazo.</p>
             <div id="grid-conquistas" class="grid-conquistas"></div>
         </div>
     </div>
